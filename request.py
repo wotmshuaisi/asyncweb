@@ -1,14 +1,17 @@
 import json
+import socket
 
 
 class AsyncRequest:
+    Connection: socket.socket
     Method: str
     URI: str
     HTTPVersion: str
     Headers: dict
     Body: str
 
-    def __init__(self,):
+    def __init__(self, conn: socket.socket):
+        self.Connection = conn
         self.Method = ""
         self.URI = ""
         self.HTTPVersion = ""

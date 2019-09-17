@@ -25,7 +25,7 @@ class AsyncWeb:
         headers, body = req.decode('utf-8').split("\r\n\r\n")
         headers = headers.split("\r\n")
 
-        req = AsyncRequest()
+        req = AsyncRequest(client)
         req.Body = body
 
         for x in range(len(headers)):
