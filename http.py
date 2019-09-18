@@ -2,15 +2,18 @@ from .router import AsyncRouter
 from .request import AsyncRequest
 from .response import AsyncResponse
 
-import socket
+import logging
 import asyncio
+import socket
 import time
+import sys
 
 
 class AsyncWeb:
     __internal_loop__: asyncio.AbstractEventLoop = None
     __socket_server__: socket.socket = None
     __router_obj__: AsyncRouter
+    logger: logging.Logger
     host: str
     port: int
 
@@ -25,6 +28,13 @@ class AsyncWeb:
         self.__router_obj__ = router
 
         self.host, self.port = host, port
+
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter(
+            '[%(levelname)s]%(asctime)s: %(message)s'))
+        self.logger.addHandler(handler)
 
     async def __socket_handler__(self, client: socket.socket):
         headers = b''
@@ -56,6 +66,8 @@ class AsyncWeb:
         if self.__router_obj__[req.Method+"_"+req.URI] == None:
             await self.__internal_loop__.sock_sendall(client, AsyncResponse(**{"status_code": 404, "body": "404 Not Found."}).__toByes__())
             client.close()
+            self.__http_log__(logging.WARNING, req.Method, 404,
+                              req.URI, req.Headers.get("Content-Length"), req.Headers.get("User-Agent"))
             return
 
         response: AsyncResponse = self.__router_obj__[
@@ -70,6 +82,15 @@ class AsyncWeb:
         while True:
             client, _ = await self.__internal_loop__.sock_accept(self.__socket_server__)
             self.__internal_loop__.create_task(self.__socket_handler__(client))
+
+    def __http_log__(self, level: str, method: str, status_code: int, path: str, reqlength: str, user_agent: str):
+        fn = None
+        if level == logging.WARNING:
+            fn = self.logger.warning
+        if level == logging.INFO:
+            fn = self.logger.info
+        fn("[Method: {}] [Status: {}] [Path: {}] [Length: {}] [Agent: {}]".format(
+            method, status_code, path, reqlength, user_agent))
 
     def Run(self, ):
         print("====> Listening on [{}:{}]".format(self.host, self.port))
