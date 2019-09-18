@@ -51,6 +51,7 @@ class AsyncWeb:
         for x in range(len(headers)):
             if x == 0:
                 req.Method, req.URI, req.HTTPVersion = headers[x].split(" ")
+                req.__parameters_parse__()
                 continue
             h = headers[x].split(": ")
             req.Headers[h[0]] = h[1]
