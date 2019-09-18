@@ -20,3 +20,8 @@ class AsyncRouter(object):
         if name in self.__table__:
             return self.__table__[name]
         return None
+
+    def __iter__(self,):
+        for key in self.__table__.keys():
+            method, uri = key.split("_")
+            yield " ".join(("[{}]".format(method), uri))

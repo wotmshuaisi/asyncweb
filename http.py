@@ -11,6 +11,8 @@ class AsyncWeb:
     __internal_loop__: asyncio.AbstractEventLoop = None
     __socket_server__: socket.socket = None
     __router_obj__: AsyncRouter
+    host: str
+    port: int
 
     def __init__(self, host: str, port: int, router: AsyncRouter):
         self.__socket_server__ = socket.socket(
@@ -21,6 +23,8 @@ class AsyncWeb:
         self.__socket_server__.setblocking(False)
         self.__socket_server__.listen(12)
         self.__router_obj__ = router
+
+        self.host, self.port = host, port
 
     async def __socket_handler__(self, client: socket.socket):
         headers = b''
@@ -68,5 +72,9 @@ class AsyncWeb:
             self.__internal_loop__.create_task(self.__socket_handler__(client))
 
     def Run(self, ):
+        print("====> Listening on [{}:{}]".format(self.host, self.port))
+        for uri in self.__router_obj__:
+            print("====> {}".format(uri))
+
         self.__internal_loop__ = asyncio.get_event_loop()
         self.__internal_loop__.run_until_complete(self.__event_loop__())
