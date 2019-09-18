@@ -46,7 +46,7 @@ class AsyncWeb:
             req.Headers[h[0]] = h[1]
 
         body: bytes = b''
-        if int(req.Headers.get("Content-Length")) != 0:
+        if req.Headers.get("Content-Length") != None and int(req.Headers.get("Content-Length")) != 0:
             data_length = int(req.Headers["Content-Length"])
             for x in range((data_length//1024)+1):
                 body += await self.__internal_loop__.sock_recv(client, 1024)
