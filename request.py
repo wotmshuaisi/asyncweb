@@ -18,6 +18,8 @@ class AsyncRequest:
         self.Body = ""
 
     def __parameters_parse__(self, ):
+        if "?" not in self.URI:
+            return
         uri, parameters = self.URI.split("?")
         self.URI = uri
 
