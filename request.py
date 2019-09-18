@@ -1,17 +1,14 @@
 import json
-import socket
 
 
 class AsyncRequest:
-    Connection: socket.socket
     Method: str
     URI: str
     HTTPVersion: str
     Headers: dict
     Body: str
 
-    def __init__(self, conn: socket.socket):
-        self.Connection = conn
+    def __init__(self):
         self.Method = ""
         self.URI = ""
         self.HTTPVersion = ""
@@ -20,4 +17,6 @@ class AsyncRequest:
 
     @property
     def JSON(self, ):
-        return json.loads(self.Body)
+        if self.Headers["Content-Type"] == "application/json":
+            return json.loads(self.Body)
+        return None
