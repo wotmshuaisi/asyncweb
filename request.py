@@ -24,8 +24,11 @@ class AsyncRequest:
         if len(parameters) > 1:
             parameters = parameters.split("&")
             for query in parameters:
-                key, value = query.split("=")
-                self.Parameters[key] = value
+                if "=" in query:
+                    key, value = query.split("=")
+                    self.Parameters[key] = value
+                else:
+                    self.Parameters[key] = None
 
     @property
     def JSON(self, ):
