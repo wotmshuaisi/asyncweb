@@ -75,6 +75,14 @@ class AsyncWeb:
 
         if response != None:
             await self.__internal_loop__.sock_sendall(client, response.__toByes__())
+            level = logging.INFO
+            if response.StatusCode > 300 and response.StatusCode < 199:
+                level = logging.WARNING
+            self.__http_log__(level, req.Method, response.StatusCode,
+                              req.URI, req.Headers.get("Content-Length"), req.Headers.get("User-Agent"))
+        else:
+            self.__http_log__(logging.error, req.Method, None,
+                              req.URI, req.Headers.get("Content-Length"), req.Headers.get("User-Agent"))
 
         client.close()
 
@@ -89,6 +97,8 @@ class AsyncWeb:
             fn = self.logger.warning
         if level == logging.INFO:
             fn = self.logger.info
+        if level == logging.ERROR:
+            fn = self.logger.error
         fn("[Method: {}] [Status: {}] [Path: {}] [Length: {}] [Agent: {}]".format(
             method, status_code, path, reqlength, user_agent))
 
