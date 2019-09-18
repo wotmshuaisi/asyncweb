@@ -1,8 +1,10 @@
 from .router import AsyncRouter
 from .request import AsyncRequest
+from .response import AsyncResponse
 
 import socket
 import asyncio
+import time
 
 
 class AsyncWeb:
@@ -21,13 +23,17 @@ class AsyncWeb:
         self.__router_obj__ = router
 
     async def __socket_handler__(self, client: socket.socket):
-        req = await self.__internal_loop__.sock_recv(client, 500)
-        headers, body = req.decode('utf-8').split("\r\n\r\n")
+        headers = b''
+        while True:
+            headers += await self.__internal_loop__.sock_recv(client, 1)
+            if headers[-4:] == b'\r\n\r\n':
+                headers = headers[:-4]
+                break
+
+        headers = headers.decode('utf-8')
         headers = headers.split("\r\n")
 
-        req = AsyncRequest(client)
-        req.Body = body
-
+        req = AsyncRequest()
         for x in range(len(headers)):
             if x == 0:
                 req.Method, req.URI, req.HTTPVersion = headers[x].split(" ")
@@ -35,10 +41,24 @@ class AsyncWeb:
             h = headers[x].split(": ")
             req.Headers[h[0]] = h[1]
 
+        body: bytes = b''
+        if int(req.Headers["Content-Length"]) != 0:
+            data_length = int(req.Headers["Content-Length"])
+            for x in range((data_length//1024)+1):
+                body += await self.__internal_loop__.sock_recv(client, 1024)
+
+        req.Body = body
+
         if self.__router_obj__[req.Method+"_"+req.URI] == None:
+            await self.__internal_loop__.sock_sendall(client, AsyncResponse(**{"status_code": 404, "body": "404 Not Found."}).__toByes__())
             client.close()
             return
-        self.__router_obj__[req.Method+"_"+req.URI](req)
+
+        response: AsyncResponse = self.__router_obj__[
+            req.Method+"_"+req.URI](req)
+
+        if response != None:
+            await self.__internal_loop__.sock_sendall(client, response.__toByes__())
 
         client.close()
 
