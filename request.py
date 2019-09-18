@@ -20,10 +20,12 @@ class AsyncRequest:
     def __parameters_parse__(self, ):
         uri, parameters = self.URI.split("?")
         self.URI = uri
-        parameters = parameters.split("&")
-        for query in parameters:
-            key, value = query.split("=")
-            self.Parameters[key] = value
+
+        if len(parameters) > 1:
+            parameters = parameters.split("&")
+            for query in parameters:
+                key, value = query.split("=")
+                self.Parameters[key] = value
 
     @property
     def JSON(self, ):
