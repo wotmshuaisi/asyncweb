@@ -14,7 +14,7 @@ class AsyncResponse:
     def set_header(self, k, v):
         self.Headers[k] = v
 
-    def JSON(self, data):
+    def JSON(self, data: str):
         self.StatusCode = 200
         self.set_header("Content-type", "application/json")
         self.Body = json.dumps(data)
@@ -22,12 +22,12 @@ class AsyncResponse:
     def Text(self, data: str):
         self.StatusCode = 200
         self.set_header("Content-type", "text/plain")
-        self.Body = data.encode('utf-8')
+        self.Body = data
 
     def Html(self, data: str):
         self.StatusCode = 200
         self.set_header("Content-type", "text/html")
-        self.Body = data.encode('utf-8')
+        self.Body = data
 
     @property
     def __headers_serialized__(self, ):
