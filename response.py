@@ -46,7 +46,7 @@ class AsyncResponse:
         tmp = ""
         for k, v in self.Headers.items():
             tmp += '{}:{}\r\n'.format(k, v)
-        if len(self.__dict__) > 0:
+        if len(self.__cookie__) > 0:
             cookies = ''
             for k, v in self.__cookie__.items():
                 cookies += k+"="+v+";"
