@@ -45,7 +45,7 @@ class AsyncResponse:
             expire = time.gmtime(time.time() + (24*60*60))
         else:
             expire = time.gmtime(time.time() + expire_sec)
-        self.__cookie_expire__ = expire
+        self.__cookie_expire__ = time.strftime("%a, %d-%b-%Y %T GMT", expire)
 
     def DelCookie(self, key: str):
         del self.__cookie__[key]
