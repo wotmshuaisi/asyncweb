@@ -14,7 +14,7 @@ class AsyncResponse:
     def set_header(self, k, v):
         self.Headers[k] = v
 
-    def JSON(self, data: str):
+    def JSON(self, data):
         self.StatusCode = 200
         self.set_header("Content-type", "application/json")
         self.Body = json.dumps(data)

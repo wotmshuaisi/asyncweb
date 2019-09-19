@@ -22,7 +22,6 @@ class AsyncRequest:
             return
         uri, parameters = self.URI.split("?")
         self.URI = uri
-
         if len(parameters) > 1:
             parameters = parameters.split("&")
             for query in parameters:
@@ -30,7 +29,7 @@ class AsyncRequest:
                     key, value = query.split("=")
                     self.Parameters[key] = value
                 else:
-                    self.Parameters[key] = None
+                    self.Parameters[query] = ""
 
     @property
     def JSON(self, ):
