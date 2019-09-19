@@ -8,6 +8,7 @@ class AsyncRequest:
     HTTPVersion: str
     Headers: dict
     Body: str
+    Cookie: dict
 
     def __init__(self):
         self.Method = ""
@@ -16,6 +17,7 @@ class AsyncRequest:
         self.HTTPVersion = ""
         self.Headers = {}
         self.Body = ""
+        self.Cookie = {}
 
     def __parameters_parse__(self, ):
         if "?" not in self.URI:
@@ -30,6 +32,17 @@ class AsyncRequest:
                     self.Parameters[key] = value
                 else:
                     self.Parameters[query] = ""
+
+    def __cookie_parse__(self, ):
+        cookie = self.Headers.get("Cookie", "")
+        if cookie == "":
+            return
+        for item in cookie.split(";"):
+            if "=" not in item:
+                self.Cookie[item] = ""
+            else:
+                key, val = item.split("=")
+                self.Cookie[key] = val
 
     @property
     def JSON(self, ):

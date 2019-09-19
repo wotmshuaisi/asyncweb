@@ -56,6 +56,8 @@ class AsyncWeb:
             h = headers[x].split(": ")
             req.Headers[h[0]] = h[1]
 
+        req.__cookie_parse__()
+
         body: bytes = b''
         if req.Headers.get("Content-Length") != None and int(req.Headers.get("Content-Length")) != 0:
             data_length = int(req.Headers["Content-Length"])
