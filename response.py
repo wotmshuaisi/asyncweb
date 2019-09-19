@@ -1,4 +1,5 @@
 import json
+import time
 
 
 class AsyncResponse:
@@ -6,12 +7,14 @@ class AsyncResponse:
     Headers: dict
     Body: str
     __cookie__: dict
+    __cookie_expire__: str
 
     def __init__(self, **kwargs):
         self.StatusCode = kwargs.get("status_code") or 204
         self.Headers = kwargs.get("headers") or {}
         self.Body = kwargs.get("body") or ""
         self.__cookie__ = {}
+        self.__cookie_expire__ = None
 
     def set_header(self, k, v):
         self.Headers[k] = v
@@ -35,10 +38,16 @@ class AsyncResponse:
         self.StatusCode = 302
         self.set_header("Location", path)
 
-    def SetCookie(self, key: str, val: str):
+    def SetCookie(self, key: str, val: str, expire_sec):
         self.__cookie__[key] = val
+        expire_sec = time.gmtime(time.time())
+        if expire_sec == None:
+            expire = time.gmtime(time.time() + (24*60*60))
+        else:
+            expire = time.gmtime(time.time() + expire_sec)
+        self.__cookie_expire__ = expire
 
-    def DelCookie(self, key: str,):
+    def DelCookie(self, key: str):
         del self.__cookie__[key]
 
     @property
@@ -51,6 +60,7 @@ class AsyncResponse:
             for k, v in self.__cookie__.items():
                 cookies += k+"="+v+";"
             tmp += 'Set-Cookie:{}'.format(cookies)
+            tmp += 'Expires=' + self.__cookie_expire__
         return tmp
 
     def __toByes__(self,):
