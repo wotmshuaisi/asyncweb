@@ -19,6 +19,16 @@ class AsyncResponse:
         self.set_header("Content-type", "application/json")
         self.Body = json.dumps(data)
 
+    def Text(self, data):
+        self.StatusCode = 200
+        self.set_header("Content-type", "text/plain")
+        self.Body = bytes(data)
+
+    def Html(self, data):
+        self.StatusCode = 200
+        self.set_header("Content-type", "text/html")
+        self.Body = bytes(data)
+
     @property
     def __headers_serialized__(self, ):
         tmp = ""
