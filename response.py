@@ -40,7 +40,6 @@ class AsyncResponse:
 
     def SetCookie(self, key: str, val: str, expire_sec):
         self.__cookie__[key] = val
-        expire_sec = time.gmtime(time.time())
         if expire_sec == None:
             expire = time.gmtime(time.time() + (24*60*60))
         else:
