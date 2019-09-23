@@ -2,6 +2,7 @@ from .router import AsyncRouter
 from .request import AsyncRequest
 from .response import AsyncResponse
 
+import traceback
 import logging
 import asyncio
 import socket
@@ -41,9 +42,8 @@ class AsyncWeb:
             req = await self.__headers_recv__(client)
             req.Body = await self.__body_recv__(
                 req.Headers.get("Content-Length"), client)
-        except Exception as e:
-            self.logger.error(
-                "an error occured while recving data from client, error: {}".format(e))
+        except Exception:
+            print(traceback.format_exc())
             client.close()
             return
 
