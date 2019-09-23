@@ -38,8 +38,8 @@ class AsyncWeb:
 
     async def __socket_handler__(self, client: socket.socket):
         try:
-            req = self.__headers_recv__(client)
-            req.Body = self.__body_recv__(
+            req = await self.__headers_recv__(client)
+            req.Body = await self.__body_recv__(
                 req.Headers.get("Content-Length"), client)
         except Exception as e:
             self.logger.error(
@@ -71,7 +71,7 @@ class AsyncWeb:
 
         client.close()
 
-    def __headers_recv__(self, client: socket.socket):
+    async def __headers_recv__(self, client: socket.socket):
         headers = b''
 
         while True:
@@ -93,7 +93,7 @@ class AsyncWeb:
 
         return req
 
-    def __body_recv__(self, content_length: int,  client: socket.socket):
+    async def __body_recv__(self, content_length: int,  client: socket.socket):
         body: bytes = b''
 
         if content_length != 0:
