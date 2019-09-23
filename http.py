@@ -37,35 +37,17 @@ class AsyncWeb:
         self.logger.addHandler(handler)
 
     async def __socket_handler__(self, client: socket.socket):
-        headers = b''
-        while True:
-            headers += await self.__internal_loop__.sock_recv(client, 1)
-            if headers[-4:] == b'\r\n\r\n':
-                headers = headers[:-4]
-                break
-
-        headers = headers.decode('utf-8')
-        headers = headers.split("\r\n")
-
-        req = AsyncRequest()
-        for x in range(len(headers)):
-            if x == 0:
-                req.Method, req.URI, req.HTTPVersion = headers[x].split(" ")
-                req.__parameters_parse__()
-                continue
-            h = headers[x].split(": ")
-            req.Headers[h[0]] = h[1]
+        try:
+            req = self.__headers_recv__(client)
+            req.Body = self.__body_recv__(
+                req.Headers.get("Content-Length"), client)
+        except Exception as e:
+            self.logger.error(
+                "an error occured while recving data from client, error: {}".format(e))
+            client.close()
+            return
 
         req.__cookie_parse__()
-
-        body: bytes = b''
-        if req.Headers.get("Content-Length") != None and int(req.Headers.get("Content-Length")) != 0:
-            data_length = int(req.Headers["Content-Length"])
-            for x in range((data_length//1024)+1):
-                body += await self.__internal_loop__.sock_recv(client, 1024)
-
-        req.Body = body
-
         if self.__router_obj__[req.Method+"_"+req.URI] == None:
             await self.__internal_loop__.sock_sendall(client, AsyncResponse(**{"status_code": 404, "body": "404 Not Found."}).__toByes__())
             client.close()
@@ -88,6 +70,37 @@ class AsyncWeb:
                               req.URI, req.Headers.get("Content-Length"), req.Headers.get("User-Agent"))
 
         client.close()
+
+    def __headers_recv__(self, client: socket.socket):
+        headers = b''
+
+        while True:
+            headers += await self.__internal_loop__.sock_recv(client, 1)
+            if headers[-4:] == b'\r\n\r\n':
+                headers = headers[:-4]
+                break
+        headers = headers.decode('utf-8')
+        headers = headers.split("\r\n")
+
+        req = AsyncRequest()
+        for x in range(len(headers)):
+            if x == 0:
+                req.Method, req.URI, req.HTTPVersion = headers[x].split(" ")
+                req.__parameters_parse__()
+                continue
+            h = headers[x].split(": ")
+            req.Headers[h[0]] = h[1]
+
+        return req
+
+    def __body_recv__(self, content_length: int,  client: socket.socket):
+        body: bytes = b''
+
+        if content_length != 0:
+            for _ in range((content_length//1024)+1):
+                body += await self.__internal_loop__.sock_recv(client, 1024)
+
+        return body
 
     async def __event_loop__(self,):
         while True:
