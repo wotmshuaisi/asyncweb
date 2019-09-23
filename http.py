@@ -96,7 +96,7 @@ class AsyncWeb:
     async def __body_recv__(self, content_length: int,  client: socket.socket):
         body: bytes = b''
 
-        if content_length != 0:
+        if content_length != None and content_length != 0:
             for _ in range((content_length//1024)+1):
                 body += await self.__internal_loop__.sock_recv(client, 1024)
 
