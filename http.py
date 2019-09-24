@@ -25,7 +25,6 @@ class AsyncWeb:
             socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__socket_server__.bind((host, port))
         self.__socket_server__.setblocking(False)
-        self.__socket_server__.listen(12)
         self.__router_obj__ = router
 
         self.host, self.port = host, port
