@@ -19,12 +19,16 @@ class AsyncWeb:
     port: int
 
     def __init__(self, host: str, port: int, router: AsyncRouter):
-        self.__socket_server__ = socket.socket(
+        sock = socket.socket(
             socket.AF_INET, socket.SOCK_STREAM)
-        self.__socket_server__.setsockopt(
+        sock.setsockopt(
             socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.__socket_server__.bind((host, port))
-        self.__socket_server__.setblocking(False)
+        sock.bind((host, port))
+        sock.setblocking(False)
+        sock.listen(100)
+
+        self.__socket_server__ = sock
+
         self.__router_obj__ = router
 
         self.host, self.port = host, port
@@ -49,9 +53,9 @@ class AsyncWeb:
         req.__cookie_parse__()
         if self.__router_obj__[req.Method+"_"+req.URI] == None:
             await self.__internal_loop__.sock_sendall(client, AsyncResponse(**{"status_code": 404, "body": "404 Not Found."}).__toByes__())
-            client.close()
             self.__http_log__(logging.WARNING, req.Method, 404,
                               req.URI, req.Headers.get("Content-Length"), req.Headers.get("User-Agent"))
+            client.close()
             return
 
         response: AsyncResponse = self.__router_obj__[
@@ -121,6 +125,10 @@ class AsyncWeb:
         print("====> Listening on [{}:{}]".format(self.host, self.port))
         for uri in self.__router_obj__:
             print("====> {}".format(uri))
-
-        self.__internal_loop__ = asyncio.get_event_loop()
-        self.__internal_loop__.run_until_complete(self.__event_loop__())
+        try:
+            self.__internal_loop__ = asyncio.get_event_loop()
+            self.__internal_loop__.run_until_complete(self.__event_loop__())
+        except Exception:
+            print(traceback.format_exc())
+            self.__socket_server__.close()
+            return
