@@ -63,7 +63,12 @@ class AsyncWeb:
             req.Method+"_"+req.URI](req)
 
         if response != None:
-            await self.__internal_loop__.sock_sendall(client, response.__toByes__())
+            try:
+                await self.__internal_loop__.sock_sendall(client, response.__toByes__())
+            except Exception:
+                print(traceback.format_exc())
+                client.close()
+                return
             level = logging.INFO
             if response.StatusCode > 300 and response.StatusCode < 199:
                 level = logging.WARNING
