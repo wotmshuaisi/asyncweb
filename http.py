@@ -26,6 +26,7 @@ class AsyncWeb:
         sock.bind((host, port))
         sock.setblocking(False)
         sock.listen(100)
+        sock.settimeout(10)
 
         self.__socket_server__ = sock
 
@@ -41,13 +42,13 @@ class AsyncWeb:
         self.logger.addHandler(handler)
 
     async def __socket_handler__(self, client: socket.socket):
-        try:
-            req = await self.__headers_recv__(client)
-            req.Body = await self.__body_recv__(
-                req.Headers.get("Content-Length"), client)
-        except Exception:
-            print(traceback.format_exc())
-            client.close()
+
+        req, ok = await self.__headers_recv__(client)
+        if not ok:
+            return
+        req.Body, ok = await self.__body_recv__(
+            req.Headers.get("Content-Length"), client)
+        if not ok:
             return
 
         req.__cookie_parse__()
@@ -76,34 +77,40 @@ class AsyncWeb:
 
     async def __headers_recv__(self, client: socket.socket):
         headers = b''
-
-        while True:
-            headers += await self.__internal_loop__.sock_recv(client, 1)
-            if headers[-4:] == b'\r\n\r\n':
-                headers = headers[:-4]
-                break
-        headers = headers.decode('utf-8')
-        headers = headers.split("\r\n")
-
-        req = AsyncRequest()
-        for x in range(len(headers)):
-            if x == 0:
-                req.Method, req.URI, req.HTTPVersion = headers[x].split(" ")
-                req.__parameters_parse__()
-                continue
-            h = headers[x].split(": ")
-            req.Headers[h[0]] = h[1]
-
-        return req
+        try:
+            while True:
+                headers += await self.__internal_loop__.sock_recv(client, 1)
+                if headers[-4:] == b'\r\n\r\n':
+                    headers = headers[:-4]
+                    break
+            headers = headers.decode('utf-8')
+            headers = headers.split("\r\n")
+            req = AsyncRequest()
+            for x in range(len(headers)):
+                if x == 0:
+                    req.Method, req.URI, req.HTTPVersion = headers[x].split(
+                        " ")
+                    req.__parameters_parse__()
+                    continue
+                h = headers[x].split(": ")
+                req.Headers[h[0]] = h[1]
+            return req, True
+        except Exception:
+            print(traceback.format_exc())
+            client.close()
+            return None, False
 
     async def __body_recv__(self, content_length: int,  client: socket.socket):
         body: bytes = b''
-
-        if content_length != None and content_length != 0:
-            for _ in range((content_length//1024)+1):
-                body += await self.__internal_loop__.sock_recv(client, 1024)
-
-        return body
+        try:
+            if content_length != None and content_length != 0:
+                for _ in range((content_length//1024)+1):
+                    body += await self.__internal_loop__.sock_recv(client, 1024)
+            return body, True
+        except Exception:
+            print(traceback.format_exc())
+            client.close()
+            return None, False
 
     async def __event_loop__(self,):
         while True:
