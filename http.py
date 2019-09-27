@@ -26,7 +26,6 @@ class AsyncWeb:
         sock.bind((host, port))
         sock.setblocking(False)
         sock.listen(100)
-        sock.settimeout(10)
 
         self.__socket_server__ = sock
 
@@ -42,7 +41,7 @@ class AsyncWeb:
         self.logger.addHandler(handler)
 
     async def __socket_handler__(self, client: socket.socket):
-
+        client.settimeout(10)
         req, ok = await self.__headers_recv__(client)
         if not ok:
             return
